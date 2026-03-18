@@ -1,5 +1,5 @@
 // public/sw.js
-const CACHE_VERSION = `gorila-gym-${Date.now()}`;
+const CACHE_VERSION = "v3"; // ← Solo cambiá este número en cada deploy
 const STATIC_CACHE = `gorilla-gym-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `gorilla-gym-dynamic-${CACHE_VERSION}`;
 
@@ -17,7 +17,7 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(STATIC_CACHE).then((cache) => cache.addAll(STATIC_ASSETS)),
   );
-  // NO llamar skipWaiting aquí — esperar confirmación del usuario
+  self.skipWaiting(); // ← Activar inmediatamente sin esperar confirmación
 });
 
 self.addEventListener("activate", (event) => {
@@ -34,7 +34,7 @@ self.addEventListener("activate", (event) => {
       ),
     ),
   );
-  self.clients.claim();
+  self.clients.claim(); // ← Tomar control de todas las tabs abiertas
 });
 
 self.addEventListener("message", (event) => {
@@ -64,59 +64,30 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // API y admin siempre van a la red
   if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/admin")) {
     return;
   }
 
   event.respondWith(
-    caches.match(request).then((cachedResponse) => {
-      if (cachedResponse) {
-        if (url.origin.includes("supabase.co")) {
-          return fetch(request)
-            .then((response) => {
-              if (response?.status === 200) {
-                caches
-                  .open(DYNAMIC_CACHE)
-                  .then((cache) => cache.put(request, response.clone()));
-              }
-              return response;
-            })
-            .catch(() => cachedResponse);
-        }
-        return cachedResponse;
-      }
-
-      return fetch(request)
-        .then((response) => {
-          if (
-            !response ||
-            response.status !== 200 ||
-            response.type === "error"
-          ) {
-            return response;
-          }
-          if (
-            url.pathname.match(/\.(png|jpg|jpeg|gif|svg|webp|ico)$/) ||
-            url.pathname.startsWith("/dashboard") ||
-            url.origin.includes("supabase.co")
-          ) {
-            caches
-              .open(DYNAMIC_CACHE)
-              .then((cache) => cache.put(request, response.clone()));
-          }
+    fetch(request)
+      .then((response) => {
+        if (!response || response.status !== 200 || response.type === "error") {
           return response;
-        })
-        .catch(() => {
-          if (request.headers.get("accept")?.includes("text/html")) {
-            return caches.match("/dashboard");
-          }
-        });
-    }),
+        }
+        // Solo cachear imágenes estáticas
+        if (url.pathname.match(/\.(png|jpg|jpeg|gif|svg|webp|ico)$/)) {
+          caches
+            .open(DYNAMIC_CACHE)
+            .then((cache) => cache.put(request, response.clone()));
+        }
+        return response;
+      })
+      .catch(() => {
+        // Solo usar cache como fallback offline
+        return caches
+          .match(request)
+          .then((cached) => cached || caches.match("/dashboard"));
+      }),
   );
-});
-
-self.addEventListener("sync", (event) => {
-  if (event.tag === "sync-data") {
-    event.waitUntil(Promise.resolve());
-  }
 });

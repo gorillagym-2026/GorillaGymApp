@@ -18,6 +18,8 @@ interface MemberMembershipSimpleProps {
   prices: Record<string, number>;
 }
 
+type StartMode = "today" | "from_expiry" | "custom";
+
 export function MemberMembershipSimple({
   membership,
   memberId,
@@ -31,6 +33,11 @@ export function MemberMembershipSimple({
   const [paymentMethod, setPaymentMethod] = useState<
     "efectivo" | "transferencia"
   >("efectivo");
+  const [startMode, setStartMode] = useState<StartMode>("today");
+  const [customDate, setCustomDate] = useState<string>(() => {
+    const today = new Date();
+    return today.toISOString().split("T")[0];
+  });
 
   const planLabels: Record<string, string> = {
     quincenal: "Quincenal",
@@ -42,23 +49,44 @@ export function MemberMembershipSimple({
   const planDurations: Record<string, number> = {
     quincenal: 15,
     mensual: 30,
-    trimestral: 90,
-    anual: 365,
+    diario: 1,
+    semanal: 7,
   };
 
-  const calculateEndDate = (planType: string) => {
-    const end = new Date();
-    if (planType === "quincenal") end.setDate(end.getDate() + 15);
+  // Devuelve la fecha de inicio según el modo seleccionado
+  const getStartDate = (): Date => {
+    if (startMode === "from_expiry" && membership?.end_date) {
+      // Día siguiente al vencimiento actual
+      const expiry = new Date(membership.end_date + "T12:00:00");
+      expiry.setDate(expiry.getDate() + 1);
+      return expiry;
+    }
+    if (startMode === "custom") {
+      return new Date(customDate + "T12:00:00");
+    }
+    // "today"
+    return new Date();
+  };
+
+  const calculateEndDate = (planType: string): string => {
+    const start = getStartDate();
+    const end = new Date(start);
+    if (planType === "diario") end.setDate(end.getDate() + 1);
+    else if (planType === "semanal") end.setDate(end.getDate() + 7);
+    else if (planType === "quincenal") end.setDate(end.getDate() + 15);
     else if (planType === "mensual") end.setMonth(end.getMonth() + 1);
-    else if (planType === "trimestral") end.setMonth(end.getMonth() + 3);
-    else end.setFullYear(end.getFullYear() + 1);
     return end.toISOString().split("T")[0];
+  };
+
+  const getStartDateDisplay = (): string => {
+    return getStartDate().toLocaleDateString("es-AR");
   };
 
   const handleRenew = async () => {
     setLoading(true);
     setError(null);
     try {
+      const startDate = getStartDate().toISOString().split("T")[0];
       const res = await fetch("/api/memberships", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -67,6 +95,7 @@ export function MemberMembershipSimple({
           planType: selectedPlan,
           paymentMethod,
           currentMembershipId: membership?.id || null,
+          startDate,
         }),
       });
       const data = await res.json();
@@ -115,6 +144,32 @@ export function MemberMembershipSimple({
   const status = getStatusDisplay();
   const daysRemaining = getDaysRemaining();
 
+  // Modos disponibles: si no hay membresía activa, no mostrar "desde vencimiento"
+  const startModes: { value: StartMode; label: string; description: string }[] =
+    [
+      {
+        value: "today",
+        label: "Desde hoy",
+        description: `Inicia ${new Date().toLocaleDateString("es-AR")}`,
+      },
+      ...(membership
+        ? [
+            {
+              value: "from_expiry" as StartMode,
+              label: "Desde vencimiento",
+              description: membership.end_date
+                ? `Inicia ${new Date(new Date(membership.end_date + "T12:00:00").setDate(new Date(membership.end_date + "T12:00:00").getDate() + 1)).toLocaleDateString("es-AR")}`
+                : "Sin vencimiento",
+            },
+          ]
+        : []),
+      {
+        value: "custom",
+        label: "Fecha personalizada",
+        description: "Elegí el día de inicio",
+      },
+    ];
+
   return (
     <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
       <div className="flex items-center justify-between mb-6">
@@ -139,8 +194,7 @@ export function MemberMembershipSimple({
         <div className="space-y-6">
           <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
             <p className="text-blue-300 text-sm">
-              Selecciona el tipo de membresia y metodo de pago. La fecha de
-              inicio sera hoy.
+              Selecciona el tipo de membresia y metodo de pago.
             </p>
           </div>
 
@@ -155,16 +209,70 @@ export function MemberMembershipSimple({
                   key={method}
                   type="button"
                   onClick={() => setPaymentMethod(method)}
-                  className={`p-4 rounded-lg border-2 transition-all ${paymentMethod === method ? "border-green-500 bg-green-500/10" : "border-gray-600 bg-gray-700/50 hover:border-gray-500"}`}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    paymentMethod === method
+                      ? "border-green-500 bg-green-500/10"
+                      : "border-gray-600 bg-gray-700/50 hover:border-gray-500"
+                  }`}
                 >
-                  <div className="flex items-center justify-center space-x-2">
-                    <span className="text-white font-medium capitalize">
-                      {method === "efectivo" ? "Efectivo" : "Transferencia"}
-                    </span>
-                  </div>
+                  <span className="text-white font-medium capitalize">
+                    {method === "efectivo" ? "Efectivo" : "Transferencia"}
+                  </span>
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Fecha de Inicio */}
+          <div>
+            <label className="block text-white font-medium mb-3">
+              Fecha de Inicio
+            </label>
+            <div className="space-y-2">
+              {startModes.map((mode) => (
+                <button
+                  key={mode.value}
+                  type="button"
+                  onClick={() => setStartMode(mode.value)}
+                  className={`w-full p-3 rounded-lg border-2 transition-all text-left flex items-center justify-between ${
+                    startMode === mode.value
+                      ? "border-blue-500 bg-blue-500/10"
+                      : "border-gray-600 bg-gray-700/50 hover:border-gray-500"
+                  }`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <span
+                      className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                        startMode === mode.value
+                          ? "border-blue-500 bg-blue-500"
+                          : "border-gray-500"
+                      }`}
+                    >
+                      {startMode === mode.value && (
+                        <span className="text-white text-[8px]">✓</span>
+                      )}
+                    </span>
+                    <span className="text-white font-medium">{mode.label}</span>
+                  </div>
+                  <span className="text-gray-400 text-sm">
+                    {mode.description}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/* Datepicker — solo visible en modo custom */}
+            {startMode === "custom" && (
+              <div className="mt-3">
+                <input
+                  type="date"
+                  value={customDate}
+                  onChange={(e) => setCustomDate(e.target.value)}
+                  min={new Date().toISOString().split("T")[0]}
+                  className="w-full p-3 rounded-lg border-2 border-blue-500 bg-gray-700 text-white focus:outline-none focus:border-blue-400"
+                />
+              </div>
+            )}
           </div>
 
           {/* Planes */}
@@ -178,11 +286,19 @@ export function MemberMembershipSimple({
                   key={plan}
                   type="button"
                   onClick={() => setSelectedPlan(plan)}
-                  className={`w-full p-4 rounded-lg border-2 transition-all text-left ${selectedPlan === plan ? "border-green-500 bg-green-500/10" : "border-gray-600 bg-gray-700/50 hover:border-gray-500"}`}
+                  className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                    selectedPlan === plan
+                      ? "border-green-500 bg-green-500/10"
+                      : "border-gray-600 bg-gray-700/50 hover:border-gray-500"
+                  }`}
                 >
                   <div className="flex items-center space-x-3 mb-2">
                     <span
-                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedPlan === plan ? "border-green-500 bg-green-500" : "border-gray-500"}`}
+                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        selectedPlan === plan
+                          ? "border-green-500 bg-green-500"
+                          : "border-gray-500"
+                      }`}
                     >
                       {selectedPlan === plan && (
                         <span className="text-white text-xs">✓</span>
@@ -197,13 +313,16 @@ export function MemberMembershipSimple({
                       ${price.toLocaleString()}
                     </p>
                     <p className="text-gray-400 text-sm">
-                      Duracion: {planDurations[plan] || "—"} dias
+                      Duracion: {planDurations[plan] ?? "—"} dias
+                    </p>
+                    <p className="text-gray-400 text-sm">
+                      Inicio: {getStartDateDisplay()}
                     </p>
                     <p className="text-gray-400 text-sm">
                       Vence:{" "}
-                      {new Date(calculateEndDate(plan)).toLocaleDateString(
-                        "es-AR",
-                      )}
+                      {new Date(
+                        calculateEndDate(plan) + "T12:00:00",
+                      ).toLocaleDateString("es-AR")}
                     </p>
                   </div>
                 </button>

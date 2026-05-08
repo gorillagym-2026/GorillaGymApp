@@ -268,7 +268,6 @@ export function MemberMembershipSimple({
                   type="date"
                   value={customDate}
                   onChange={(e) => setCustomDate(e.target.value)}
-                  min={new Date().toISOString().split("T")[0]}
                   className="w-full p-3 rounded-lg border-2 border-blue-500 bg-gray-700 text-white focus:outline-none focus:border-blue-400"
                 />
               </div>

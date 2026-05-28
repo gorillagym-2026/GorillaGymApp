@@ -53,10 +53,8 @@ export function MemberMembershipSimple({
     semanal: 7,
   };
 
-  // Devuelve la fecha de inicio según el modo seleccionado
   const getStartDate = (): Date => {
     if (startMode === "from_expiry" && membership?.end_date) {
-      // Día siguiente al vencimiento actual
       const expiry = new Date(membership.end_date + "T12:00:00");
       expiry.setDate(expiry.getDate() + 1);
       return expiry;
@@ -64,7 +62,6 @@ export function MemberMembershipSimple({
     if (startMode === "custom") {
       return new Date(customDate + "T12:00:00");
     }
-    // "today"
     return new Date();
   };
 
@@ -144,7 +141,6 @@ export function MemberMembershipSimple({
   const status = getStatusDisplay();
   const daysRemaining = getDaysRemaining();
 
-  // Modos disponibles: si no hay membresía activa, no mostrar "desde vencimiento"
   const startModes: { value: StartMode; label: string; description: string }[] =
     [
       {
@@ -267,9 +263,13 @@ export function MemberMembershipSimple({
                 <input
                   type="date"
                   value={customDate}
+                  min="2020-01-01"
                   onChange={(e) => setCustomDate(e.target.value)}
                   className="w-full p-3 rounded-lg border-2 border-blue-500 bg-gray-700 text-white focus:outline-none focus:border-blue-400"
                 />
+                <p className="text-gray-400 text-xs mt-2">
+                  Podés elegir fechas pasadas para registrar pagos anteriores.
+                </p>
               </div>
             )}
           </div>

@@ -3,6 +3,7 @@ interface RecentRenewal {
   plan_type: string;
   payment_method: string;
   created_at: string;
+  amount_paid?: number | null;
   profiles:
     | {
         id: string;
@@ -75,6 +76,13 @@ export function RecentRenewals({ renewals, prices }: RecentRenewalsProps) {
                   </p>
                 </div>
               </div>
+
+              <p className="text-green-400 font-bold">
+                $
+                {(
+                  renewal.amount_paid ?? getPlanPrice(renewal.plan_type)
+                ).toLocaleString("es-AR")}
+              </p>
 
               <div className="text-right">
                 <p className="text-green-400 font-bold">

@@ -88,6 +88,7 @@ export default async function MemberDetailPage({
     created_at: m.createdAt.toISOString(),
     status: m.status as "active" | "expired" | "suspended",
     payment_method: m.paymentMethod ?? undefined,
+    amount_paid: m.amountPaid ?? null, // ← NUEVO
   }));
 
   return (
@@ -111,6 +112,7 @@ export default async function MemberDetailPage({
           <MembershipHistory
             memberships={membershipsForComponent}
             memberName={member.fullName}
+            prices={prices} // ← NUEVO
           />
         </div>
         <div className="mt-6">

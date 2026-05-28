@@ -24,6 +24,11 @@ export async function POST(req: NextRequest) {
     else if (planType === "quincenal") end.setDate(end.getDate() + 15);
     else if (planType === "mensual") end.setMonth(end.getMonth() + 1);
 
+    const priceRecord = await prisma.membershipPrice.findUnique({
+      where: { planType },
+    });
+    const amountPaid = priceRecord?.price ?? null;
+
     await prisma.$transaction(async (tx) => {
       if (currentMembershipId) {
         await tx.membership.update({
@@ -39,6 +44,7 @@ export async function POST(req: NextRequest) {
           endDate: end,
           status: "active",
           paymentMethod: paymentMethod || null,
+          amountPaid, // ← NUEVO
         },
       });
     });

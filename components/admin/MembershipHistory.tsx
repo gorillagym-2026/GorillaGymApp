@@ -11,16 +11,19 @@ interface Membership {
   status: string;
   payment_method?: string;
   created_at: string;
+  amount_paid?: number | null; // ← NUEVO
 }
 
 interface MembershipHistoryProps {
   memberships: Membership[];
   memberName: string;
+  prices: Record<string, number>; // ← NUEVO
 }
 
 export function MembershipHistory({
   memberships,
   memberName,
+  prices, // ← NUEVO
 }: MembershipHistoryProps) {
   const router = useRouter();
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -36,18 +39,8 @@ export function MembershipHistory({
     mensual: "Mensual",
     diario: "Día",
     semanal: "Semanal",
-    // compatibilidad planes viejos
     trimestral: "Trimestral",
     anual: "Anual",
-  };
-
-  const planPrices: Record<string, number> = {
-    diario: 2000,
-    semanal: 6000,
-    quincenal: 10000,
-    mensual: 18000,
-    trimestral: 40000,
-    anual: 150000,
   };
 
   const paymentMethodLabels: Record<string, string> = {
@@ -58,6 +51,11 @@ export function MembershipHistory({
   const paymentMethodIcons: Record<string, string> = {
     efectivo: "💵",
     transferencia: "🏦",
+  };
+
+  // ← NUEVO: usa amount_paid si existe, sino el precio actual de la DB
+  const getPlanPrice = (m: Membership): number => {
+    return m.amount_paid ?? prices[m.plan_type] ?? 0;
   };
 
   const getStatusBadge = (status: string, endDate: string) => {
@@ -137,10 +135,8 @@ export function MembershipHistory({
     );
   }
 
-  const totalPagado = memberships.reduce(
-    (sum, m) => sum + (planPrices[m.plan_type] || 0),
-    0,
-  );
+  // ← Usa getPlanPrice en lugar del objeto hardcodeado
+  const totalPagado = memberships.reduce((sum, m) => sum + getPlanPrice(m), 0);
   const totalRenovaciones = memberships.length;
   const porEfectivo = memberships.filter(
     (m) => m.payment_method === "efectivo",
@@ -189,7 +185,7 @@ export function MembershipHistory({
             ? editDates.end_date
             : membership.end_date;
           const duration = getDuration(currentStart, currentEnd);
-          const amount = planPrices[membership.plan_type] || 0;
+          const amount = getPlanPrice(membership); // ← usa getPlanPrice
 
           return (
             <div

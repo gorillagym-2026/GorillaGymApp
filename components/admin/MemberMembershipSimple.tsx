@@ -190,7 +190,7 @@ export function MemberMembershipSimple({
     ];
 
   return (
-    <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
+    <div className="bg-gray-800/80 border border-gray-700/60 rounded-xl p-6 animate-fade-in-up">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-white">Membresia</h2>
         {!showRenewForm && (
@@ -205,7 +205,7 @@ export function MemberMembershipSimple({
 
       {/* Aviso si la membresía sigue activa */}
       {showRenewForm && !expired && (
-        <div className="mb-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
+        <div className="mb-4 bg-yellow-500/8 border border-yellow-500/25 rounded-xl p-4 animate-fade-in">
           <p className="text-yellow-400 text-sm">
             ⚠️ La membresía actual todavía está <strong>activa</strong>. Los precios actualizados aplican solo a membresías vencidas. Al renovar, se registrará el precio vigente.
           </p>
@@ -423,7 +423,7 @@ export function MemberMembershipSimple({
       ) : membership ? (
         <div className="space-y-6">
           <div
-            className={`rounded-lg p-6 text-center border-2 ${
+            className={`rounded-xl p-6 text-center border-2 shadow-sm ${
               daysRemaining! < 0
                 ? "bg-red-500/10 border-red-500"
                 : daysRemaining! <= 3
@@ -440,7 +440,7 @@ export function MemberMembershipSimple({
             </p>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-gray-700/50 rounded-lg p-4">
+            <div className="bg-gray-900/40 border border-gray-700/30 rounded-lg p-4">
               <p className="text-gray-400 text-sm mb-1">Plan</p>
               <p className="text-white font-bold text-lg">
                 {planLabels[membership.plan_type] || membership.plan_type}
@@ -449,7 +449,7 @@ export function MemberMembershipSimple({
                 ${prices[membership.plan_type]?.toLocaleString() || "—"}
               </p>
             </div>
-            <div className="bg-gray-700/50 rounded-lg p-4">
+            <div className="bg-gray-900/40 border border-gray-700/30 rounded-lg p-4">
               <p className="text-gray-400 text-sm mb-1">Fecha de Vencimiento</p>
               <p className="text-white font-bold text-lg">
                 {new Date(membership.end_date).toLocaleDateString("es-AR")}
@@ -457,14 +457,14 @@ export function MemberMembershipSimple({
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-gray-700/50 rounded-lg p-4">
+            <div className="bg-gray-900/40 border border-gray-700/30 rounded-lg p-4">
               <p className="text-gray-400 text-sm mb-1">Inicio de Membresia</p>
               <p className="text-white">
                 {new Date(membership.start_date).toLocaleDateString("es-AR")}
               </p>
             </div>
             {membership.payment_method && (
-              <div className="bg-gray-700/50 rounded-lg p-4">
+              <div className="bg-gray-900/40 border border-gray-700/30 rounded-lg p-4">
                 <p className="text-gray-400 text-sm mb-1">Metodo de Pago</p>
                 <p className="text-white capitalize">
                   {membership.payment_method}

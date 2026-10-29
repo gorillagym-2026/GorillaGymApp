@@ -1,6 +1,3 @@
-// ============================================================
-// ARCHIVO: app/dashboard/exercises/page.tsx
-// ============================================================
 import { getSession } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 import { UserNav } from "@/components/user/UserNav";
@@ -21,9 +18,7 @@ export default async function ExercisesLibraryPage() {
     prisma.exercise.findMany({
       orderBy: { name: "asc" },
       include: {
-        images: {
-          orderBy: { orderIndex: "asc" },
-        },
+        images: { orderBy: { orderIndex: "asc" } },
       },
     }),
   ]);
@@ -47,26 +42,32 @@ export default async function ExercisesLibraryPage() {
   return (
     <div className="min-h-screen bg-gray-900">
       <UserNav userName={profile?.fullName || session.name || "Usuario"} />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
+        {/* Header */}
+        <div className="mb-6 animate-fade-in-up">
           <Link
             href="/dashboard"
-            className="inline-flex items-center text-green-400 hover:text-green-300 mb-4"
+            className="inline-flex items-center gap-1.5 text-gray-500 hover:text-green-400 text-sm mb-4 transition-colors duration-150 group"
           >
-            ← Volver al inicio
+            <svg className="w-3.5 h-3.5 transition-transform duration-150 group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Volver al inicio
           </Link>
-          <h1 className="text-4xl font-bold text-white mb-2">
+          <h1 className="text-xl font-bold text-white mb-1">
             Biblioteca de Ejercicios
           </h1>
-          <p className="text-gray-400">
-            Explora {exercises.length} ejercicios en {muscleGroups.length}{" "}
-            grupos musculares
+          <p className="text-gray-500 text-sm">
+            {exercises.length} ejercicios · {muscleGroups.length} grupos musculares
           </p>
         </div>
-        <UserExercisesLibrary
-          exercises={exercisesForComponent}
-          muscleGroups={muscleGroups}
-        />
+
+        <div className="animate-fade-in-up" style={{ animationDelay: "60ms" }}>
+          <UserExercisesLibrary
+            exercises={exercisesForComponent}
+            muscleGroups={muscleGroups}
+          />
+        </div>
       </main>
     </div>
   );

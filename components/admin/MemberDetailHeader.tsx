@@ -45,41 +45,44 @@ export function MemberDetailHeader({ member }: { member: Member }) {
   };
 
   const handleCancel = () => {
-    setFormData({
-      full_name: member.full_name,
-      dni: member.dni || "",
-      phone: member.phone || "",
-    });
+    setFormData({ full_name: member.full_name, dni: member.dni || "", phone: member.phone || "" });
     setIsEditing(false);
     setError(null);
   };
 
+  const initial = (member.full_name ?? "?").charAt(0).toUpperCase();
+
   return (
     <>
-      <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
+      <div className="bg-gray-800/80 border border-gray-700/60 rounded-xl p-6 animate-fade-in-up">
         <div className="flex items-start justify-between mb-6">
-          <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center">
-              <span className="text-white text-2xl font-bold">
-                {(member.full_name ?? "?").charAt(0).toUpperCase()}
-              </span>
+          <div className="flex items-center gap-4">
+            {/* Avatar */}
+            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center shadow-lg flex-shrink-0">
+              <span className="text-white text-xl font-bold">{initial}</span>
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white">
-                {member.full_name}
-              </h1>
-              <p className="text-gray-400 text-sm">
+              <h1 className="text-xl font-bold text-white">{member.full_name}</h1>
+              <p className="text-gray-500 text-xs mt-0.5">
                 Miembro desde{" "}
-                {new Date(member.created_at).toLocaleDateString("es-AR")}
+                {new Date(member.created_at).toLocaleDateString("es-AR", {
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
+                })}
               </p>
             </div>
           </div>
+
           {!isEditing && (
             <button
               onClick={() => setIsEditing(true)}
-              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-700/60 hover:bg-gray-700 border border-gray-600/50 hover:border-gray-500 text-gray-300 hover:text-white rounded-lg text-sm transition-all duration-200"
             >
-              ✏️ Editar
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Editar
             </button>
           )}
         </div>
@@ -91,95 +94,62 @@ export function MemberDetailHeader({ member }: { member: Member }) {
         )}
 
         {isEditing ? (
-          <div className="space-y-4">
+          <div className="space-y-4 animate-fade-in">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Nombre Completo
-                </label>
-                <input
-                  type="text"
-                  value={formData.full_name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, full_name: e.target.value })
-                  }
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  DNI
-                </label>
-                <input
-                  type="text"
-                  pattern="\d{7,8}"
-                  maxLength={8}
-                  value={formData.dni}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      dni: e.target.value.replace(/\D/g, ""),
-                    })
-                  }
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Teléfono
-                </label>
-                <input
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phone: e.target.value })
-                  }
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500"
-                />
-              </div>
+              {[
+                { label: "Nombre Completo", key: "full_name", type: "text" },
+                { label: "DNI", key: "dni", type: "text" },
+                { label: "Teléfono", key: "phone", type: "tel" },
+              ].map(({ label, key, type }) => (
+                <div key={key}>
+                  <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">
+                    {label}
+                  </label>
+                  <input
+                    type={type}
+                    value={formData[key as keyof typeof formData]}
+                    onChange={(e) =>
+                      setFormData({ ...formData, [key]: key === "dni" ? e.target.value.replace(/\D/g, "") : e.target.value })
+                    }
+                    className="w-full px-3 py-2 bg-gray-900/60 border border-gray-600/40 rounded-lg text-white text-sm focus:outline-none focus:ring-1 focus:ring-green-500/50 focus:border-green-500/50 transition-all duration-200"
+                  />
+                </div>
+              ))}
             </div>
-            <div className="flex justify-end space-x-3">
+            <div className="flex justify-end gap-2">
               <button
                 onClick={handleCancel}
                 disabled={loading}
-                className="px-4 py-2 border border-gray-600 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
+                className="px-4 py-2 border border-gray-600/50 text-gray-400 hover:text-gray-300 rounded-lg hover:bg-gray-700/50 transition-all duration-200 disabled:opacity-50 text-sm"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleSave}
                 disabled={loading}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg transition-all duration-200 disabled:opacity-50 text-sm font-medium"
               >
-                {loading ? "Guardando..." : "Guardar Cambios"}
+                {loading ? "Guardando..." : "Guardar"}
               </button>
             </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <p className="text-gray-400 text-sm">DNI</p>
-              <p className="text-white font-medium">
-                {member.dni || "No especificado"}
-              </p>
-            </div>
-            <div>
-              <p className="text-gray-400 text-sm">Teléfono</p>
-              <p className="text-white font-medium">
-                {member.phone || "No especificado"}
-              </p>
-            </div>
-            <div>
-              <p className="text-gray-400 text-sm">ID de Usuario</p>
-              <p className="text-white font-medium text-xs">
-                {member.id.substring(0, 8)}...
-              </p>
-            </div>
+            {[
+              { label: "DNI", value: member.dni || "No especificado" },
+              { label: "Teléfono", value: member.phone || "No especificado" },
+              { label: "ID", value: `${member.id.substring(0, 8)}…` },
+            ].map(({ label, value }) => (
+              <div key={label} className="bg-gray-900/40 rounded-lg p-3 border border-gray-700/30">
+                <p className="text-gray-500 text-xs uppercase tracking-wider mb-1">{label}</p>
+                <p className="text-white text-sm font-medium">{value}</p>
+              </div>
+            ))}
           </div>
         )}
       </div>
 
-      <div className="mt-6">
+      <div className="mt-4">
         <ResetPasswordButton
           userId={member.id}
           userEmail={member.email || ""}

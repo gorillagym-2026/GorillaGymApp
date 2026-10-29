@@ -1,13 +1,10 @@
-// ============================================================
-// ARCHIVO: app/dashboard/routines/women/[id]/page.tsx
-// ============================================================
 import { getSession } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 import { UserNav } from "@/components/user/UserNav";
 import Link from "next/link";
 import prisma from "@/lib/prisma";
 
-export default async function WomenRoutineDaysPage({
+export default async function MenRoutineDaysPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -38,60 +35,55 @@ export default async function WomenRoutineDaysPage({
   return (
     <div className="min-h-screen bg-gray-900">
       <UserNav userName={profile?.fullName || session.name || "Usuario"} />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
+        {/* Header */}
+        <div className="mb-6 animate-fade-in-up">
           <Link
             href="/dashboard/routines/women"
-            className="inline-flex items-center text-pink-400 hover:text-pink-300 mb-4"
+            className="inline-flex items-center gap-1.5 text-gray-500 hover:text-pink-400 text-sm mb-4 transition-colors duration-150 group"
           >
-            ← Volver a rutinas
+            <svg className="w-3.5 h-3.5 transition-transform duration-150 group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Volver a rutinas
           </Link>
-          <h1 className="text-4xl font-bold text-white mb-2">{routine.name}</h1>
-          <p className="text-gray-400">
+          <h1 className="text-xl font-bold text-white mb-1">{routine.name}</h1>
+          <p className="text-gray-500 text-sm">
             {days.length} día{days.length !== 1 ? "s" : ""} de entrenamiento
           </p>
         </div>
 
         {days.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {days.map((day) => (
+          <div className="space-y-3">
+            {days.map((day, i) => (
               <Link
                 key={day.id}
                 href={`/dashboard/routines/women/${id}/day/${day.dayNumber}`}
-                className="group bg-gray-800 border-2 border-gray-700 hover:border-pink-500 rounded-xl p-6 transition-all hover:scale-105"
+                className="group flex items-center gap-4 bg-gray-800/80 border border-gray-700/60 hover:border-pink-500/40 rounded-xl p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-pink-900/20 animate-fade-in-up"
+                style={{ animationDelay: `${i * 50 + 60}ms` }}
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <span className="text-pink-400 font-bold text-sm">
-                      DÍA {day.dayNumber}
-                    </span>
-                    <h3 className="text-xl font-bold text-white mb-2 group-hover:text-pink-400 transition-colors mt-1">
-                      {day.dayName}
-                    </h3>
-                  </div>
+                <div className="w-12 h-12 rounded-xl bg-pink-900/30 border border-pink-700/30 flex flex-col items-center justify-center flex-shrink-0 group-hover:border-pink-500/50 transition-colors">
+                  <span className="text-pink-400 text-xs font-bold uppercase tracking-wider leading-none">Día</span>
+                  <span className="text-white font-bold text-lg leading-none">{day.dayNumber}</span>
                 </div>
-                {day.description && (
-                  <p className="text-gray-400 text-sm mb-4 line-clamp-2">
-                    {day.description}
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-white font-semibold text-sm group-hover:text-pink-400 transition-colors truncate">
+                    {day.dayName}
+                  </h3>
+                  <p className="text-gray-500 text-xs mt-0.5">
+                    {day.exercises.length} ejercicio{day.exercises.length !== 1 ? "s" : ""}
+                    {day.description ? ` · ${day.description}` : ""}
                   </p>
-                )}
-                <div className="flex items-center justify-between pt-4 border-t border-gray-700">
-                  <span className="text-gray-400 text-sm">
-                    {day.exercises.length} ejercicio
-                    {day.exercises.length !== 1 ? "s" : ""}
-                  </span>
-                  <span className="text-pink-400 group-hover:text-pink-300 text-sm">
-                    Ver →
-                  </span>
                 </div>
+                <svg className="w-4 h-4 text-gray-600 flex-shrink-0 transition-all duration-150 group-hover:text-pink-400 group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </Link>
             ))}
           </div>
         ) : (
-          <div className="text-center py-12">
-            <p className="text-gray-400">
-              No hay días configurados para esta rutina
-            </p>
+          <div className="bg-gray-800/80 border border-gray-700/60 rounded-xl p-8 text-center animate-fade-in">
+            <p className="text-gray-400 text-sm">No hay días configurados para esta rutina</p>
           </div>
         )}
       </main>

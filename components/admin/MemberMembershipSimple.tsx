@@ -28,14 +28,6 @@ interface MemberMembershipSimpleProps {
 
 type StartMode = "today" | "from_expiry" | "custom";
 
-const COBRADORES: { nombre: string; active: string; idle: string; dot: string }[] = [
-  { nombre: "Marcos", active: "border-blue-500 bg-blue-500/15 text-blue-200", idle: "border-blue-500/30 bg-blue-500/5 text-blue-300 hover:border-blue-500/60", dot: "bg-blue-400" },
-  { nombre: "Tamara", active: "border-pink-500 bg-pink-500/15 text-pink-200", idle: "border-pink-500/30 bg-pink-500/5 text-pink-300 hover:border-pink-500/60", dot: "bg-pink-400" },
-  { nombre: "Celso", active: "border-amber-500 bg-amber-500/15 text-amber-200", idle: "border-amber-500/30 bg-amber-500/5 text-amber-300 hover:border-amber-500/60", dot: "bg-amber-400" },
-  { nombre: "Milton", active: "border-emerald-500 bg-emerald-500/15 text-emerald-200", idle: "border-emerald-500/30 bg-emerald-500/5 text-emerald-300 hover:border-emerald-500/60", dot: "bg-emerald-400" },
-  { nombre: "Nestor", active: "border-cyan-500 bg-cyan-500/15 text-cyan-200", idle: "border-cyan-500/30 bg-cyan-500/5 text-cyan-300 hover:border-cyan-500/60", dot: "bg-cyan-400" },
-  { nombre: "Otro", active: "border-purple-500 bg-purple-500/15 text-white", idle: "border-gray-600 bg-gray-700/50 text-gray-300 hover:border-gray-500", dot: "bg-gray-400" },
-];
 
 export function MemberMembershipSimple({
   membership,
@@ -51,8 +43,6 @@ export function MemberMembershipSimple({
   const [paymentMethod, setPaymentMethod] = useState<"efectivo" | "transferencia">("efectivo");
   const [startMode, setStartMode] = useState<StartMode>("today");
   const [customDate, setCustomDate] = useState<string>(() => new Date().toISOString().split("T")[0]);
-  const [collectedBy, setCollectedBy] = useState<string>("");
-  const [customCollector, setCustomCollector] = useState<string>("");
 
   const planLabels: Record<string, string> = {
     diario: "Día",
@@ -114,7 +104,6 @@ export function MemberMembershipSimple({
     setError(null);
     try {
       const startDate = getStartDate().toISOString().split("T")[0];
-      const finalCollector = collectedBy === "Otro" ? customCollector : collectedBy;
       const res = await fetch("/api/memberships", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -124,14 +113,11 @@ export function MemberMembershipSimple({
           paymentMethod,
           currentMembershipId: membership?.id || null,
           startDate,
-          collectedBy: finalCollector || null,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setShowRenewForm(false);
-      setCollectedBy("");
-      setCustomCollector("");
       router.refresh();
     } catch (err: any) {
       setError(err.message);
@@ -218,38 +204,6 @@ export function MemberMembershipSimple({
               </div>
             </div>
           )}
-
-          {/* Cobrador */}
-          <div>
-            <label className="block text-white font-medium mb-3 text-sm">
-              ¿Quién recibió el pago?{" "}
-              <span className="text-gray-400 font-normal">(cobrador)</span>
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              {COBRADORES.map(({ nombre, active, idle, dot }) => (
-                <button
-                  key={nombre}
-                  type="button"
-                  onClick={() => setCollectedBy(collectedBy === nombre ? "" : nombre)}
-                  className={`p-3 rounded-lg border-2 transition-all text-sm font-medium flex items-center justify-center gap-2 ${
-                    collectedBy === nombre ? `${active} shadow-lg` : idle
-                  }`}
-                >
-                  <span className={`w-2 h-2 rounded-full ${dot}`} />
-                  {nombre}
-                </button>
-              ))}
-            </div>
-            {collectedBy === "Otro" && (
-              <input
-                type="text"
-                placeholder="Nombre del cobrador..."
-                value={customCollector}
-                onChange={(e) => setCustomCollector(e.target.value)}
-                className="mt-2 w-full p-3 rounded-lg border-2 border-purple-500 bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:border-purple-400 text-sm"
-              />
-            )}
-          </div>
 
           {/* Método de pago */}
           <div>
@@ -414,7 +368,7 @@ export function MemberMembershipSimple({
           {/* Botones */}
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-700">
             <button
-              onClick={() => { setShowRenewForm(false); setError(null); setCollectedBy(""); setCustomCollector(""); }}
+              onClick={() => { setShowRenewForm(false); setError(null); }}
               disabled={loading}
               className="px-4 py-2 border border-gray-600 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50 text-sm"
             >

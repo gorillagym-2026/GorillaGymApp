@@ -86,6 +86,7 @@ export async function POST(req: NextRequest) {
           paymentMethod: paymentMethod || null,
           amountPaid,
           collectedBy: session.name || null,
+          collectedById: session.id,
         },
       });
     });

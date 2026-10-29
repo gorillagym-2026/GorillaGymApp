@@ -24,6 +24,7 @@ export function AdminNav({ userName }: AdminNavProps) {
   const navItems = [
     { href: "/admin",           label: "Dashboard",   icon: "📊" },
     { href: "/admin/members",   label: "Alumnos",     icon: "👥" },
+    { href: "/admin/recaudacion", label: "Recaudación", icon: "💰" },
     { href: "/admin/exercises", label: "Ejercicios",  icon: "🏋️" },
     { href: "/admin/routines",  label: "Rutinas",     icon: "📋" },
     { href: "/admin/admins",    label: "Admins",      icon: "👑" },

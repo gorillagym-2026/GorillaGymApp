@@ -92,6 +92,7 @@ model Membership {
   paymentMethod String?          @map("payment_method")
   amountPaid    Int?             @map("amount_paid")
   collectedBy   String?          @map("collected_by")  // quien recibió el pago
+  collectedById String?          @map("collected_by_id") @db.Uuid // admin logueado que cargó el cobro
   createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt     DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
@@ -162,4 +163,18 @@ model RoutineAssignment {
 
   @@unique([routineId, userId])
   @@map("routine_assignments")
+}
+
+// Rendición de efectivo: un cobrador entrega el efectivo acumulado al encargado
+model CashSettlement {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collectorId    String?  @map("collector_id") @db.Uuid // admin que rinde (null si es un cobrador legacy sin usuario)
+  collectorName  String   @map("collector_name")
+  amount         Int
+  receivedById   String   @map("received_by_id") @db.Uuid
+  receivedByName String   @map("received_by_name")
+  note           String?
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("cash_settlements")
 }

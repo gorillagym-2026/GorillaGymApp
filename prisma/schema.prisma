@@ -73,6 +73,7 @@ model MembershipPrice {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   planType  String   @unique @map("plan_type")
   price     Int
+  priceOverdue Int?     @map("price_overdue")
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   updatedBy String?  @map("updated_by") @db.Uuid
 

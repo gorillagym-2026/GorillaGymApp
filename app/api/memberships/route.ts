@@ -1,6 +1,6 @@
 // ============================================================
 // ARCHIVO: app/api/memberships/route.ts
-// POST - Crear/renovar membresía
+// POST - Crear/renovar membresía con precio automático según estado
 // ============================================================
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/supabase-server";
@@ -24,10 +24,50 @@ export async function POST(req: NextRequest) {
     else if (planType === "quincenal") end.setDate(end.getDate() + 15);
     else if (planType === "mensual") end.setMonth(end.getMonth() + 1);
 
+    // Obtener precios configurados para el plan
     const priceRecord = await prisma.membershipPrice.findUnique({
       where: { planType },
     });
-    const amountPaid = priceRecord?.price ?? null;
+
+    // Detectar si el socio está vencido (membresía anterior ya expirada)
+    let isOverdue = false;
+    if (currentMembershipId) {
+      const currentMembership = await prisma.membership.findUnique({
+        where: { id: currentMembershipId },
+        select: { endDate: true, status: true },
+      });
+      if (currentMembership) {
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        const endDate = new Date(currentMembership.endDate);
+        endDate.setHours(0, 0, 0, 0);
+        isOverdue = endDate < now || currentMembership.status === "expired";
+      }
+    } else {
+      // Si no tiene membresía previa, verificar si tiene alguna vencida
+      const lastMembership = await prisma.membership.findFirst({
+        where: { userId },
+        orderBy: { startDate: "desc" },
+        select: { endDate: true, status: true },
+      });
+      if (lastMembership) {
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        const endDate = new Date(lastMembership.endDate);
+        endDate.setHours(0, 0, 0, 0);
+        isOverdue = endDate < now || lastMembership.status === "expired";
+      }
+    }
+
+    // Seleccionar precio: si está vencido y hay precio vencido configurado, usarlo
+    let amountPaid: number | null = null;
+    if (priceRecord) {
+      if (isOverdue && priceRecord.priceOverdue != null) {
+        amountPaid = priceRecord.priceOverdue;
+      } else {
+        amountPaid = priceRecord.price;
+      }
+    }
 
     await prisma.$transaction(async (tx) => {
       if (currentMembershipId) {
@@ -50,7 +90,12 @@ export async function POST(req: NextRequest) {
       });
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      amountPaid,
+      isOverdue,
+      planType,
+    });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

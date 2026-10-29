@@ -48,17 +48,21 @@ export default async function MemberDetailPage({
     prisma.membershipPrice.findMany(),
   ]);
 
-  // Mapear precios de DB → { quincenal: 8000, mensual: 15000, ... }
+  // Mapear precios normales (en término)
   const pricesMap = Object.fromEntries(
     dbPrices.map((p) => [p.planType, p.price]),
+  );
+  // Mapear precios vencidos
+  const pricesOverdueMap = Object.fromEntries(
+    dbPrices.map((p) => [p.planType, (p as any).priceOverdue ?? null]),
   );
 
   // Fallback si no hay precios en DB
   const prices = {
-    quincenal: 8000,
-    mensual: 15000,
     diario: 2000,
     semanal: 6000,
+    quincenal: 8000,
+    mensual: 15000,
     ...pricesMap,
   };
 
@@ -77,6 +81,7 @@ export default async function MemberDetailPage({
         end_date: membership.endDate.toISOString().split("T")[0],
         created_at: membership.createdAt.toISOString(),
         status: membership.status as "active" | "expired" | "suspended",
+        payment_method: membership.paymentMethod ?? undefined,
       }
     : null;
 
@@ -102,6 +107,7 @@ export default async function MemberDetailPage({
             membership={membershipForComponent}
             memberId={member.id}
             prices={prices}
+            pricesOverdue={pricesOverdueMap}
           />
           <AssignRoutineButton
             memberId={member.id}
@@ -113,7 +119,7 @@ export default async function MemberDetailPage({
           <MembershipHistory
             memberships={membershipsForComponent}
             memberName={member.fullName}
-            prices={prices} // ← NUEVO
+            prices={prices}
           />
         </div>
         <div className="mt-6">

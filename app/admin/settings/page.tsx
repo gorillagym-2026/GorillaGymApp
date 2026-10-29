@@ -13,11 +13,12 @@ export default async function SettingsPage() {
     orderBy: { planType: "asc" },
   });
 
-  // Adaptar al formato snake_case que espera PriceSettings
+  // Adaptar al formato snake_case que espera PriceSettings (incluye price_overdue)
   const pricesForComponent = prices.map((p) => ({
     id: p.id,
     plan_type: p.planType,
     price: p.price,
+    price_overdue: (p as any).priceOverdue ?? null,
     updated_at: p.updatedAt.toISOString(),
     updated_by: p.updatedBy,
   }));
@@ -26,10 +27,10 @@ export default async function SettingsPage() {
     <div className="min-h-screen bg-gray-900">
       <AdminNav userName={session.name} />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white">⚙️ Configuración</h1>
+        <div className="mb-8 animate-fade-in-up">
+          <h1 className="text-3xl font-bold text-white">Configuración</h1>
           <p className="text-gray-400 mt-2">
-            Gestiona los precios de las membresías y otras configuraciones
+            Gestiona los precios de las membresías y otras configuraciones del gimnasio
           </p>
         </div>
         <PriceSettings prices={pricesForComponent} />

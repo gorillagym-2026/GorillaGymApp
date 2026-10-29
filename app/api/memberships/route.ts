@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    const { userId, planType, paymentMethod, currentMembershipId, startDate } =
+    const { userId, planType, paymentMethod, currentMembershipId, startDate, collectedBy } =
       await req.json();
 
     const today = startDate ? new Date(startDate + "T12:00:00") : new Date();
@@ -44,7 +44,8 @@ export async function POST(req: NextRequest) {
           endDate: end,
           status: "active",
           paymentMethod: paymentMethod || null,
-          amountPaid, // ← NUEVO
+          amountPaid,
+          collectedBy: collectedBy || null,
         },
       });
     });

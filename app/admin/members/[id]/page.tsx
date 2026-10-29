@@ -88,7 +88,8 @@ export default async function MemberDetailPage({
     created_at: m.createdAt.toISOString(),
     status: m.status as "active" | "expired" | "suspended",
     payment_method: m.paymentMethod ?? undefined,
-    amount_paid: m.amountPaid ?? null, // ← NUEVO
+    amount_paid: m.amountPaid ?? null,
+    collected_by: m.collectedBy ?? null,
   }));
 
   return (

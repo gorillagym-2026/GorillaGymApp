@@ -35,7 +35,7 @@ export default async function AdminDashboard() {
     }),
     prisma.membership.findMany({
       where: { createdAt: { gte: firstDayOfMonth, lte: lastDayOfMonth } },
-      select: { planType: true },
+      select: { planType: true, amountPaid: true },
     }),
     prisma.membership.findMany({
       where: { createdAt: { gte: oneWeekAgo } },
@@ -48,13 +48,15 @@ export default async function AdminDashboard() {
       orderBy: { createdAt: "desc" },
     }),
     prisma.membership.findMany({
-      take: 5,
+      where: { createdAt: { gte: oneWeekAgo } }, // últimos 7 días
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
         planType: true,
         paymentMethod: true,
         createdAt: true,
+        amountPaid: true,
+        collectedBy: true,
         user: { select: { id: true, fullName: true, dni: true } },
       },
     }),
@@ -66,8 +68,9 @@ export default async function AdminDashboard() {
     { diario: 2000, semanal: 6000, quincenal: 10000, mensual: 18000 },
   );
 
+  // Usar amountPaid si existe para recaudación mensual
   const monthlyRevenue = monthlyMemberships.reduce(
-    (sum, m) => sum + (prices[m.planType] || 0),
+    (sum, m) => sum + (m.amountPaid ?? prices[m.planType] ?? 0),
     0,
   );
 
@@ -92,6 +95,8 @@ export default async function AdminDashboard() {
     plan_type: m.planType,
     payment_method: m.paymentMethod ?? "",
     created_at: m.createdAt.toISOString(),
+    amount_paid: m.amountPaid ?? null,
+    collected_by: m.collectedBy ?? null,
     profiles: [{ id: m.user.id, full_name: m.user.fullName, dni: m.user.dni }],
   }));
 

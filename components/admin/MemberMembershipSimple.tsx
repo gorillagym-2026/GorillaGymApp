@@ -20,6 +20,9 @@ interface MemberMembershipSimpleProps {
 
 type StartMode = "today" | "from_expiry" | "custom";
 
+// Lista de cobradores del gimnasio
+const COBRADORES = ["Milton", "Fabricio", "Otro"];
+
 export function MemberMembershipSimple({
   membership,
   memberId,
@@ -38,6 +41,7 @@ export function MemberMembershipSimple({
     const today = new Date();
     return today.toISOString().split("T")[0];
   });
+  const [collectedBy, setCollectedBy] = useState<string>("");
 
   const planLabels: Record<string, string> = {
     quincenal: "Quincenal",
@@ -51,6 +55,22 @@ export function MemberMembershipSimple({
     mensual: 30,
     diario: 1,
     semanal: 7,
+  };
+
+  // Verifica si la membresía actual está vencida
+  const isMembershipExpired = (): boolean => {
+    if (!membership) return true;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const endDate = new Date(membership.end_date);
+    endDate.setHours(0, 0, 0, 0);
+    return endDate < today || membership.status === "expired";
+  };
+
+  // Obtiene el precio a mostrar según si venció o no
+  const getPriceForPlan = (plan: string): number => {
+    // El precio siempre muestra el actual de la DB
+    return prices[plan] ?? 0;
   };
 
   const getStartDate = (): Date => {
@@ -93,11 +113,13 @@ export function MemberMembershipSimple({
           paymentMethod,
           currentMembershipId: membership?.id || null,
           startDate,
+          collectedBy: collectedBy || null,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setShowRenewForm(false);
+      setCollectedBy("");
       router.refresh();
     } catch (err: any) {
       setError(err.message);
@@ -140,6 +162,7 @@ export function MemberMembershipSimple({
 
   const status = getStatusDisplay();
   const daysRemaining = getDaysRemaining();
+  const expired = isMembershipExpired();
 
   const startModes: { value: StartMode; label: string; description: string }[] =
     [
@@ -180,6 +203,15 @@ export function MemberMembershipSimple({
         )}
       </div>
 
+      {/* Aviso si la membresía sigue activa */}
+      {showRenewForm && !expired && (
+        <div className="mb-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
+          <p className="text-yellow-400 text-sm">
+            ⚠️ La membresía actual todavía está <strong>activa</strong>. Los precios actualizados aplican solo a membresías vencidas. Al renovar, se registrará el precio vigente.
+          </p>
+        </div>
+      )}
+
       {error && (
         <div className="mb-4 bg-red-500/10 border border-red-500/20 rounded-lg p-3">
           <p className="text-red-400 text-sm">{error}</p>
@@ -192,6 +224,40 @@ export function MemberMembershipSimple({
             <p className="text-blue-300 text-sm">
               Selecciona el tipo de membresia y metodo de pago.
             </p>
+          </div>
+
+          {/* Cobrador */}
+          <div>
+            <label className="block text-white font-medium mb-3">
+              ¿Quién recibió el pago? <span className="text-gray-400 font-normal text-sm">(cobrador)</span>
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {COBRADORES.map((nombre) => (
+                <button
+                  key={nombre}
+                  type="button"
+                  onClick={() => setCollectedBy(collectedBy === nombre ? "" : nombre)}
+                  className={`p-3 rounded-lg border-2 transition-all text-sm ${
+                    collectedBy === nombre
+                      ? "border-purple-500 bg-purple-500/10 text-white"
+                      : "border-gray-600 bg-gray-700/50 hover:border-gray-500 text-gray-300"
+                  }`}
+                >
+                  {nombre}
+                </button>
+              ))}
+            </div>
+            {collectedBy === "Otro" && (
+              <input
+                type="text"
+                placeholder="Nombre del cobrador..."
+                onChange={(e) => setCollectedBy(e.target.value)}
+                className="mt-2 w-full p-3 rounded-lg border-2 border-purple-500 bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:border-purple-400 text-sm"
+              />
+            )}
+            {collectedBy && collectedBy !== "Otro" && (
+              <p className="text-purple-400 text-xs mt-1">Cobrador: {collectedBy}</p>
+            )}
           </div>
 
           {/* Metodo de Pago */}
@@ -309,7 +375,7 @@ export function MemberMembershipSimple({
                   </div>
                   <div className="ml-8 space-y-1">
                     <p className="text-green-400 font-bold text-xl">
-                      ${price.toLocaleString()}
+                      ${getPriceForPlan(plan).toLocaleString()}
                     </p>
                     <p className="text-gray-400 text-sm">
                       Duracion: {planDurations[plan] ?? "—"} dias
@@ -334,6 +400,7 @@ export function MemberMembershipSimple({
               onClick={() => {
                 setShowRenewForm(false);
                 setError(null);
+                setCollectedBy("");
               }}
               disabled={loading}
               className="px-4 py-2 border border-gray-600 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"

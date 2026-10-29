@@ -89,7 +89,8 @@ model Membership {
   status        MembershipStatus @default(active)
   planType      String           @map("plan_type")
   paymentMethod String?          @map("payment_method")
-  amountPaid    Int?             @map("amount_paid")   // ← NUEVO
+  amountPaid    Int?             @map("amount_paid")
+  collectedBy   String?          @map("collected_by")  // quien recibió el pago
   createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt     DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 

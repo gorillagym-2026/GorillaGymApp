@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 let savedPrompt: any = null;
 
-export function InstallAppButton() {
+export function InstallAppButton({ variant = "button" }: { variant?: "button" | "menuItem" }) {
   const [, forceRender] = useState(0);
   const [showIOSModal, setShowIOSModal] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
@@ -40,25 +40,27 @@ export function InstallAppButton() {
 
   return (
     <>
-      <button
-        onClick={handleClick}
-        className="flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-green-600/20 hover:bg-green-600/30 text-green-400 border border-green-600/30 transition-colors"
-      >
-        <svg
-          className="w-3 h-3"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+      {variant === "menuItem" ? (
+        <button
+          onClick={handleClick}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-          />
-        </svg>
-        <span>Instalar app</span>
-      </button>
+          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Instalar app
+        </button>
+      ) : (
+        <button
+          onClick={handleClick}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap bg-green-600/20 hover:bg-green-600/30 text-green-400 border border-green-600/30 transition-colors"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          <span>Instalar app</span>
+        </button>
+      )}
 
       {showIOSModal && (
         <div

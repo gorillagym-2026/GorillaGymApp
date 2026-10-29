@@ -28,7 +28,14 @@ interface MemberMembershipSimpleProps {
 
 type StartMode = "today" | "from_expiry" | "custom";
 
-const COBRADORES = ["Milton", "Fabricio", "Otro"];
+const COBRADORES: { nombre: string; active: string; idle: string; dot: string }[] = [
+  { nombre: "Marcos", active: "border-blue-500 bg-blue-500/15 text-blue-200", idle: "border-blue-500/30 bg-blue-500/5 text-blue-300 hover:border-blue-500/60", dot: "bg-blue-400" },
+  { nombre: "Tamara", active: "border-pink-500 bg-pink-500/15 text-pink-200", idle: "border-pink-500/30 bg-pink-500/5 text-pink-300 hover:border-pink-500/60", dot: "bg-pink-400" },
+  { nombre: "Celso", active: "border-amber-500 bg-amber-500/15 text-amber-200", idle: "border-amber-500/30 bg-amber-500/5 text-amber-300 hover:border-amber-500/60", dot: "bg-amber-400" },
+  { nombre: "Milton", active: "border-emerald-500 bg-emerald-500/15 text-emerald-200", idle: "border-emerald-500/30 bg-emerald-500/5 text-emerald-300 hover:border-emerald-500/60", dot: "bg-emerald-400" },
+  { nombre: "Nestor", active: "border-cyan-500 bg-cyan-500/15 text-cyan-200", idle: "border-cyan-500/30 bg-cyan-500/5 text-cyan-300 hover:border-cyan-500/60", dot: "bg-cyan-400" },
+  { nombre: "Otro", active: "border-purple-500 bg-purple-500/15 text-white", idle: "border-gray-600 bg-gray-700/50 text-gray-300 hover:border-gray-500", dot: "bg-gray-400" },
+];
 
 export function MemberMembershipSimple({
   membership,
@@ -219,17 +226,16 @@ export function MemberMembershipSimple({
               <span className="text-gray-400 font-normal">(cobrador)</span>
             </label>
             <div className="grid grid-cols-3 gap-2">
-              {COBRADORES.map((nombre) => (
+              {COBRADORES.map(({ nombre, active, idle, dot }) => (
                 <button
                   key={nombre}
                   type="button"
                   onClick={() => setCollectedBy(collectedBy === nombre ? "" : nombre)}
-                  className={`p-3 rounded-lg border-2 transition-all text-sm font-medium ${
-                    collectedBy === nombre
-                      ? "border-purple-500 bg-purple-500/10 text-white"
-                      : "border-gray-600 bg-gray-700/50 hover:border-gray-500 text-gray-300"
+                  className={`p-3 rounded-lg border-2 transition-all text-sm font-medium flex items-center justify-center gap-2 ${
+                    collectedBy === nombre ? `${active} shadow-lg` : idle
                   }`}
                 >
+                  <span className={`w-2 h-2 rounded-full ${dot}`} />
                   {nombre}
                 </button>
               ))}

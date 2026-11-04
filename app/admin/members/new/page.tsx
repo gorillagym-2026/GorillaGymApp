@@ -16,7 +16,8 @@ export default async function NewMemberPage() {
 
   const plans = prices.map((p) => ({
     plan_type: p.planType,
-    price: p.price,
+    price: p.priceNew && p.priceNew > 0 ? p.priceNew : p.price,
+    regular_price: p.price,
   }));
 
   return (
@@ -37,7 +38,7 @@ export default async function NewMemberPage() {
             Registra un nuevo miembro y configura su membresía inicial
           </p>
         </div>
-        <NewMemberForm plans={plans} />
+        <NewMemberForm plans={plans} collectorName={session.name} />
       </main>
     </div>
   );

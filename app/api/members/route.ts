@@ -15,13 +15,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { full_name, dni, phone, password, plan_type, start_date } = body;
-    console.log(
-      ">>> full_name recibido:",
-      full_name,
-      "| tipo:",
-      typeof full_name,
-    );
+    const { full_name, dni, phone, password, plan_type, start_date, payment_method } = body;
 
     // Validar DNI
     if (!/^\d{7,8}$/.test(dni)) {
@@ -48,6 +42,15 @@ export async function POST(req: NextRequest) {
     else if (plan_type === "quincenal") end.setDate(end.getDate() + 15);
     else if (plan_type === "mensual") end.setMonth(end.getMonth() + 1);
 
+    // Precio de ingreso: lo define el servidor (no se puede bajar desde el formulario)
+    const priceRecord = await prisma.membershipPrice.findUnique({ where: { planType: plan_type } });
+    const amountPaid = priceRecord
+      ? priceRecord.priceNew && priceRecord.priceNew > 0
+        ? priceRecord.priceNew
+        : priceRecord.price
+      : null;
+    const paymentMethod = payment_method === "transferencia" ? "transferencia" : "efectivo";
+
     // Hash password y crear perfil + membresía en transacción
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -59,6 +62,8 @@ export async function POST(req: NextRequest) {
           phone: phone || null,
           password: hashedPassword,
           role: "member",
+          createdById: session.id,
+          createdByName: session.name,
         },
       });
 
@@ -69,6 +74,10 @@ export async function POST(req: NextRequest) {
           startDate: start,
           endDate: end,
           status: "active",
+          paymentMethod,
+          amountPaid,
+          collectedBy: session.name || null,
+          collectedById: session.id,
         },
       });
     });

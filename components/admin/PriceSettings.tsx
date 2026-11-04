@@ -7,6 +7,7 @@ interface Price {
   plan_type: string;
   price: number;
   price_overdue: number | null;
+  price_new?: number | null;
   updated_at: string;
 }
 interface PriceSettingsProps {
@@ -68,12 +69,12 @@ export function PriceSettings({ prices }: PriceSettingsProps) {
     prices.reduce(
       (acc, p) => ({
         ...acc,
-        [p.plan_type]: { price: p.price, priceOverdue: p.price_overdue ?? 0 },
+        [p.plan_type]: { price: p.price, priceOverdue: p.price_overdue ?? 0, priceNew: p.price_new ?? 0 },
       }),
-      {} as Record<string, { price: number; priceOverdue: number }>,
+      {} as Record<string, { price: number; priceOverdue: number; priceNew: number }>,
     );
 
-  const [localPrices, setLocalPrices] = useState<Record<string, { price: number; priceOverdue: number }>>(
+  const [localPrices, setLocalPrices] = useState<Record<string, { price: number; priceOverdue: number; priceNew: number }>>(
     initPriceState,
   );
 
@@ -83,12 +84,13 @@ export function PriceSettings({ prices }: PriceSettingsProps) {
     setSuccess(false);
     try {
       // Construir payload con ambos precios
-      const payload: Record<string, { price: number; priceOverdue: number | null }> = {};
+      const payload: Record<string, { price: number; priceOverdue: number | null; priceNew: number | null }> = {};
       for (const planType of planOrder) {
-        const vals = localPrices[planType] || { price: 0, priceOverdue: 0 };
+        const vals = localPrices[planType] || { price: 0, priceOverdue: 0, priceNew: 0 };
         payload[planType] = {
           price: vals.price,
           priceOverdue: vals.priceOverdue > 0 ? vals.priceOverdue : null,
+          priceNew: vals.priceNew > 0 ? vals.priceNew : null,
         };
       }
       const res = await fetch("/api/prices", {
@@ -123,6 +125,7 @@ export function PriceSettings({ prices }: PriceSettingsProps) {
         plan_type: planType,
         price: 0,
         price_overdue: null,
+        price_new: null,
         updated_at: new Date().toISOString(),
       }
     );
@@ -143,7 +146,7 @@ export function PriceSettings({ prices }: PriceSettingsProps) {
           </div>
           <div>
             <h2 className="text-base font-semibold text-white leading-none mb-0.5">Precios de Membresías</h2>
-            <p className="text-gray-500 text-xs">En término y vencido</p>
+            <p className="text-gray-500 text-xs">En término, vencido e ingreso</p>
           </div>
         </div>
         {!editing && (
@@ -181,7 +184,7 @@ export function PriceSettings({ prices }: PriceSettingsProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {visiblePrices.map((price) => {
           const c = planColors[price.plan_type] || planColors.mensual;
-          const vals = localPrices[price.plan_type] || { price: price.price, priceOverdue: price.price_overdue ?? 0 };
+          const vals = localPrices[price.plan_type] || { price: price.price, priceOverdue: price.price_overdue ?? 0, priceNew: price.price_new ?? 0 };
 
           return (
             <div
@@ -263,6 +266,33 @@ export function PriceSettings({ prices }: PriceSettingsProps) {
                     </div>
                     <p className="text-gray-600 text-xs mt-1">Dejá en 0 para usar el mismo precio</p>
                   </div>
+                  {/* Precio de ingreso */}
+                  <div>
+                    <label className="block text-xs font-medium mb-1 text-sky-400/80 flex items-center gap-1">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                      </svg>
+                      Ingreso (alumno nuevo)
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">$</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="500"
+                        value={vals.priceNew || ""}
+                        onChange={(e) =>
+                          setLocalPrices({
+                            ...localPrices,
+                            [price.plan_type]: { ...vals, priceNew: parseInt(e.target.value) || 0 },
+                          })
+                        }
+                        className="w-full pl-7 pr-3 py-2 bg-gray-900/60 border border-sky-500/30 rounded-lg text-white text-lg font-bold focus:outline-none focus:ring-1 focus:ring-sky-400/50 transition-all placeholder:text-gray-600"
+                        placeholder="Igual que en término"
+                      />
+                    </div>
+                    <p className="text-gray-600 text-xs mt-1">Se cobra al dar de alta. 0 = precio en término</p>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -285,6 +315,20 @@ export function PriceSettings({ prices }: PriceSettingsProps) {
                     {vals.priceOverdue > 0 ? (
                       <p className="font-bold text-lg text-red-400">
                         ${vals.priceOverdue.toLocaleString()}
+                      </p>
+                    ) : (
+                      <p className="text-gray-600 text-sm italic">= En término</p>
+                    )}
+                  </div>
+                  {/* Ingreso */}
+                  <div className="bg-gray-900/40 border border-gray-700/30 rounded-lg p-2.5 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-sky-400" />
+                      <p className="text-gray-500 text-xs">Ingreso</p>
+                    </div>
+                    {vals.priceNew > 0 ? (
+                      <p className="font-bold text-lg text-sky-400">
+                        ${vals.priceNew.toLocaleString()}
                       </p>
                     ) : (
                       <p className="text-gray-600 text-sm italic">= En término</p>

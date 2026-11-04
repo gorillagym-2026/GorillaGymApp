@@ -1,144 +1,67 @@
-"use client";
+import { fmtDateOnly, money, PLAN_LABELS } from "@/lib/membership";
 
-interface Membership {
+export interface HistoryItem {
   id: string;
-  plan_type: string;
-  start_date: string;
-  end_date: string;
-  status: string;
-  payment_method?: string;
-  created_at: string;
+  planType: string;
+  startDate: string;
+  endDate: string;
+  createdAt: string;
+  paymentMethod: string | null;
+  amount: number | null;
+  isCurrent: boolean;
+  isExpired: boolean;
 }
 
-interface MembershipHistoryProps {
-  memberships: Membership[];
-}
-
-export function MembershipHistory({ memberships }: MembershipHistoryProps) {
-  const planLabels: Record<string, string> = {
-    quincenal: "Quincenal",
-    mensual: "Mensual",
-    diario: "Día",
-    semanal: "Semanal",
-  };
-
-  const planPrices: Record<string, number> = {
-    quincenal: 8000,
-    mensual: 15000,
-    diario: 2000,
-    semanal: 6000,
-  };
-
-  const paymentMethodIcons: Record<string, string> = {
-    efectivo: "💵",
-    transferencia: "🏦",
-  };
-
-  const getStatusBadge = (status: string) => {
-    if (status === "active") {
-      return (
-        <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs font-medium">
-          ✅ Activa
-        </span>
-      );
-    }
-    if (status === "expired") {
-      return (
-        <span className="px-2 py-1 bg-gray-500/20 text-gray-400 rounded text-xs font-medium">
-          ⏳ Vencida
-        </span>
-      );
-    }
-    return (
-      <span className="px-2 py-1 bg-red-500/20 text-red-400 rounded text-xs font-medium">
-        ❌ Suspendida
-      </span>
-    );
-  };
-
-  if (memberships.length === 0) {
-    return (
-      <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
-        <h2 className="text-xl font-bold text-white mb-4">
-          📜 Historial de Pagos
-        </h2>
-        <div className="text-center py-8">
-          <p className="text-gray-400">No hay registros de pagos</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Calcular total pagado
-  const totalPagado = memberships.reduce(
-    (sum, m) => sum + (planPrices[m.plan_type] || 0),
-    0,
-  );
+export function MembershipHistory({ items }: { items: HistoryItem[] }) {
+  const total = items.reduce((s, m) => s + (m.amount ?? 0), 0);
 
   return (
-    <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-white">📜 Historial de Pagos</h2>
-        <div className="text-right">
-          <p className="text-gray-400 text-sm">Total Pagado</p>
-          <p className="text-green-400 font-bold text-xl">
-            ${totalPagado.toLocaleString()}
+    <div className="bg-gray-800/80 border border-gray-700/60 rounded-xl">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-700/60">
+        <div>
+          <h2 className="text-white font-semibold">Historial de pagos</h2>
+          <p className="text-gray-500 text-xs mt-0.5">
+            {items.length} pago{items.length !== 1 ? "s" : ""}
           </p>
         </div>
-      </div>
-
-      <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
-        {memberships.map((membership) => (
-          <div
-            key={membership.id}
-            className={`rounded-lg p-4 border-2 transition-all ${
-              membership.status === "active"
-                ? "border-green-500/30 bg-green-500/5"
-                : "border-gray-600 bg-gray-700/30"
-            }`}
-          >
-            <div className="flex items-start justify-between mb-3">
-              <div>
-                <div className="flex items-center space-x-2 mb-1">
-                  <h3 className="text-white font-bold">
-                    {planLabels[membership.plan_type] || membership.plan_type}
-                  </h3>
-                  {getStatusBadge(membership.status)}
-                </div>
-                <p className="text-gray-400 text-sm">
-                  {new Date(membership.start_date).toLocaleDateString("es-AR")}{" "}
-                  - {new Date(membership.end_date).toLocaleDateString("es-AR")}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-green-400 font-bold text-lg">
-                  ${planPrices[membership.plan_type]?.toLocaleString()}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-3 border-t border-gray-600">
-              <div className="flex items-center space-x-2">
-                <span className="text-xl">
-                  {membership.payment_method
-                    ? paymentMethodIcons[membership.payment_method]
-                    : "💳"}
-                </span>
-                <span className="text-gray-300 text-sm capitalize">
-                  {membership.payment_method || "No especificado"}
-                </span>
-              </div>
-              <p className="text-gray-500 text-xs">
-                {new Date(membership.created_at).toLocaleDateString("es-AR", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                })}
-              </p>
-            </div>
+        {items.length > 0 && (
+          <div className="text-right">
+            <p className="text-gray-500 text-[11px] uppercase tracking-wider">Total pagado</p>
+            <p className="text-green-400 font-bold">{money(total)}</p>
           </div>
-        ))}
+        )}
       </div>
+
+      {items.length === 0 ? (
+        <p className="px-5 py-8 text-center text-gray-500 text-sm">Todavía no hay pagos registrados</p>
+      ) : (
+        <ul className="divide-y divide-gray-700/50 max-h-[420px] overflow-y-auto">
+          {items.map((m) => (
+            <li key={m.id} className="px-5 py-3.5 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="text-white text-sm font-medium">{PLAN_LABELS[m.planType] ?? m.planType}</p>
+                  {m.isCurrent && !m.isExpired && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-500/15 text-green-400 font-medium">Vigente</span>
+                  )}
+                  {m.isCurrent && m.isExpired && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-500/15 text-red-400 font-medium">Vencida</span>
+                  )}
+                </div>
+                <p className="text-gray-500 text-xs mt-0.5">
+                  {fmtDateOnly(m.startDate)} – {fmtDateOnly(m.endDate)}
+                </p>
+              </div>
+              <div className="text-right shrink-0">
+                <p className="text-white text-sm font-semibold">{m.amount != null ? money(m.amount) : "—"}</p>
+                <p className="text-gray-500 text-xs">
+                  {m.paymentMethod === "transferencia" ? "🏦 Transferencia" : m.paymentMethod === "efectivo" ? "💵 Efectivo" : "Sin método"}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

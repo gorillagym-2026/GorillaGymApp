@@ -67,8 +67,10 @@ export default async function MemberDetailPage({
   };
 
   const memberForComponent = {
-    ...member,
+    id: member.id,
+    dni: member.dni,
     full_name: member.fullName,
+    created_by_name: member.createdByName ?? null,
     created_at: member.createdAt.toISOString(),
     phone: member.phone ?? undefined,
   };

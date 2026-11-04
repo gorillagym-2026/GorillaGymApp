@@ -27,6 +27,8 @@ model Profile {
   fullName        String   @map("full_name")
   phone           String?
   avatarUrl       String?  @map("avatar_url")
+  createdById     String?  @map("created_by_id") @db.Uuid // admin que dio de alta
+  createdByName   String?  @map("created_by_name")
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
@@ -74,6 +76,7 @@ model MembershipPrice {
   planType  String   @unique @map("plan_type")
   price     Int
   priceOverdue Int?     @map("price_overdue")
+  priceNew     Int?     @map("price_new") // precio de ingreso (alta de alumno nuevo)
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   updatedBy String?  @map("updated_by") @db.Uuid
 

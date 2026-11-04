@@ -19,6 +19,7 @@ export default async function SettingsPage() {
     plan_type: p.planType,
     price: p.price,
     price_overdue: (p as any).priceOverdue ?? null,
+    price_new: (p as any).priceNew ?? null,
     updated_at: p.updatedAt.toISOString(),
     updated_by: p.updatedBy,
   }));

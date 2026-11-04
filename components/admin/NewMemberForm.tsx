@@ -5,11 +5,14 @@ import { useRouter } from "next/navigation";
 
 interface Plan {
   plan_type: string;
+  /** precio de ingreso (el que se cobra en el alta) */
   price: number;
+  regular_price?: number;
 }
 
 interface NewMemberFormProps {
   plans: Plan[];
+  collectorName?: string;
 }
 
 const planDurations: Record<string, number> = {
@@ -26,7 +29,7 @@ const planLabels: Record<string, string> = {
   mensual: "Mensual",
 };
 
-export function NewMemberForm({ plans }: NewMemberFormProps) {
+export function NewMemberForm({ plans, collectorName }: NewMemberFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -233,8 +236,13 @@ export function NewMemberForm({ plans }: NewMemberFormProps) {
                     {planLabels[plan.plan_type] || plan.plan_type}
                   </p>
                   <p className="text-xl font-bold text-green-400">
-                    ${plan.price.toLocaleString()}
+                    ${plan.price.toLocaleString("es-AR")}
                   </p>
+                  {plan.regular_price != null && plan.regular_price !== plan.price && (
+                    <p className="text-gray-500 text-[11px] mt-0.5">
+                      Ingreso · renovación ${plan.regular_price.toLocaleString("es-AR")}
+                    </p>
+                  )}
                   {planDurations[plan.plan_type] && (
                     <p className="text-gray-400 text-xs mt-1">
                       {planDurations[plan.plan_type]} día
@@ -280,10 +288,18 @@ export function NewMemberForm({ plans }: NewMemberFormProps) {
           <div className="bg-gray-700 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-300 text-sm">Monto a pagar</p>
-                <p className="text-white text-3xl font-bold">
-                  ${formData.amount.toLocaleString()}
+                <p className="text-gray-300 text-sm flex items-center gap-1.5">
+                  Monto a cobrar (precio de ingreso)
+                  <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
                 </p>
+                <p className="text-white text-3xl font-bold">
+                  ${formData.amount.toLocaleString("es-AR")}
+                </p>
+                {collectorName && (
+                  <p className="text-gray-400 text-xs mt-1">Cobra: <span className="text-gray-200">{collectorName}</span></p>
+                )}
                 <p className="text-gray-400 text-sm capitalize mt-1">
                   {formData.payment_method === "efectivo"
                     ? "Efectivo"

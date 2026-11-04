@@ -11,6 +11,7 @@ interface Member {
   phone?: string;
   email?: string;
   created_at: string;
+  created_by_name?: string | null;
 }
 
 export function MemberDetailHeader({ member }: { member: Member }) {
@@ -70,6 +71,9 @@ export function MemberDetailHeader({ member }: { member: Member }) {
                   month: "long",
                   year: "numeric",
                 })}
+                {member.created_by_name && (
+                  <> · alta por <span className="text-gray-300">{member.created_by_name}</span></>
+                )}
               </p>
             </div>
           </div>

@@ -15,6 +15,7 @@ interface Member {
   dni?: string;
   phone?: string;
   created_at: string;
+  created_by_name?: string | null;
   memberships: Membership[];
 }
 
@@ -140,7 +141,10 @@ export function MembersList({ members }: MembersListProps) {
                       </div>
                       <div>
                         <p className="text-white text-sm font-medium">{member.full_name}</p>
-                        <p className="text-gray-500 text-xs">DNI {member.dni || "—"}</p>
+                        <p className="text-gray-500 text-xs">
+                          DNI {member.dni || "—"}
+                          {member.created_by_name ? <span className="text-gray-600"> · alta: {member.created_by_name.split(" ")[0]}</span> : null}
+                        </p>
                       </div>
                     </div>
                   </td>

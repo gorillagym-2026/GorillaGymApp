@@ -31,6 +31,7 @@ export async function PUT(req: NextRequest) {
       Object.entries(prices).map(([planType, value]) => {
         const price = typeof value === "number" ? value : (value as any).price;
         const priceOverdue = typeof value === "number" ? null : (value as any).priceOverdue ?? null;
+          const priceNew = typeof value === "number" ? null : (value as any).priceNew ?? null;
 
         return prisma.membershipPrice.upsert({
           where: { planType },

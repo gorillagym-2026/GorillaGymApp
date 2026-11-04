@@ -30,8 +30,10 @@ export default async function MembersPage() {
       });
 
       return {
-        ...member,
+        id: member.id,
+        dni: member.dni,
         full_name: member.fullName,
+        created_by_name: member.createdByName ?? null,
         created_at: member.createdAt.toISOString(),
         phone: member.phone ?? undefined,
         memberships: membership
